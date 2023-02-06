@@ -159,7 +159,7 @@ mod tests {
                 args:
                 - --version"#;
 
-        let package_yaml: Package = from_yaml(yaml).unwrap();
+        let package_yaml: Option<Package> = from_yaml(yaml).ok();
         let package = Package {
             name: "Test Package".to_string(),
             description: "This is a test package".to_string(),
@@ -203,6 +203,6 @@ mod tests {
             },
         };
 
-        assert_eq!(package_yaml, package);
+        assert_eq!(package_yaml, Some(package));
     }
 }
