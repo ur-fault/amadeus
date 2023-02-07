@@ -1,5 +1,6 @@
 use clap::Parser;
-use run_that::manager::{REPOS_PATH, get_package_info};
+use colored::*;
+use run_that::manager::{get_package_info, REPOS_PATH};
 
 mod cli;
 
@@ -26,11 +27,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else if let Some(path) = args.path {
                 path
             } else {
-                std::env::current_dir().unwrap()
+                std::env::current_dir().expect(
+                    "Could not get current directory",
+                )
             };
 
             let package = get_package_info(&path)?;
-            println!("Package info: {:#?}", package);
+            println!("{}\n{}", "Package info:".bright_magenta(), package);
         }
     }
 

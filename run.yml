@@ -8,23 +8,14 @@ init:
     args:
     - build
     - --release
-  win: default
-  linux: default
-  mac: default
 run:
   default:
     program: cargo
     args:
     - run
     - --release
-  win: default
-  linux: default
-  mac: default
 checks:
   global:
   - program: cargo
     args:
     - --version
-  win: []
-  linux: []
-  mac: []

@@ -1,3 +1,4 @@
+use colored::*;
 use std::fmt::{Display, Formatter};
 
 use serde::{Deserialize, Serialize};
@@ -8,14 +9,44 @@ pub struct Package {
     pub description: String,  // Description of the package
     pub authors: Vec<String>, // Authors of the package
     #[serde(default)]
-    pub init: RunCommands, // Commands to run to initialize the package
+    pub init: CommandSet, // Commands to run to initialize the package
     pub run: RunCommands,     // Commands to run
     #[serde(default)]
-    pub checks: Checks, // Checks if required programs are available
+    pub checks: CommandSet, // Checks if required programs are available
+}
+
+impl Display for Package {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+        writeln!(f, "Name: {}", self.name)?;
+        writeln!(f, "Description: {}", self.description)?;
+
+        if self.authors.is_empty() {
+            writeln!(f, "No authors")?;
+        } else if self.authors.len() == 1 {
+            writeln!(f, "Author: {}", self.authors[0].underline())?;
+        } else {
+            writeln!(f, "Authors:")?;
+            for author in &self.authors {
+                writeln!(f, "\t{}", author.underline())?;
+            }
+        }
+
+        writeln!(f)?;
+
+        writeln!(f, "Commands run after cloning the repo:\n{}", self.init)?;
+        writeln!(f, "Commands used to actually run the repo:\n{}", self.run)?;
+        writeln!(
+            f,
+            "Commands run to check before installing:\n{}",
+            self.checks
+        )?;
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize, Default, PartialEq, Eq)]
-pub struct Checks {
+pub struct CommandSet {
     pub global: Vec<Command>, // Default checks to run
     #[serde(default)]
     pub win: Vec<Command>, // Checks to run on windows
@@ -25,19 +56,46 @@ pub struct Checks {
     pub mac: Vec<Command>, // Checks to run on mac
 }
 
-impl Display for Checks {
+impl Display for CommandSet {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        let print_checks = |cmds: &[Command]| -> Result<(), std::fmt::Error> {
+        fn print_checks(f: &mut Formatter<'_>, cmds: &[Command]) -> Result<(), std::fmt::Error> {
             for command in cmds {
-                write!(f, "\t{}", command)?;
+                writeln!(f, "  \t{}", command)?;
             }
 
+            writeln!(f)?;
+
             Ok(())
-        };
+        }
 
         if self.global.is_empty() {
-            
+            writeln!(f, "  No global checks")?;
+        } else {
+            writeln!(f, "  Global checks:")?;
+            print_checks(f, &self.global)?;
         }
+
+        if self.win.is_empty() {
+            writeln!(f, "  No windows specific checks")?;
+        } else {
+            writeln!(f, "  Windows checks:")?;
+            print_checks(f, &self.win)?;
+        }
+
+        if self.linux.is_empty() {
+            writeln!(f, "  No linux specific checks")?;
+        } else {
+            writeln!(f, "  Linux checks:")?;
+            print_checks(f, &self.linux)?;
+        }
+
+        if self.mac.is_empty() {
+            writeln!(f, "  No mac specific checks")?;
+        } else {
+            writeln!(f, "  Mac checks:")?;
+            print_checks(f, &self.mac)?;
+        }
+
         Ok(())
     }
 }
@@ -55,17 +113,17 @@ pub struct RunCommands {
 
 impl Display for RunCommands {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(
+        writeln!(
             f,
-            "Default: {}",
+            "  Default: {}",
             self.default
                 .clone()
                 .map(|c| format!("{}", c))
-                .unwrap_or("No default run command".to_string())
+                .unwrap_or("  No default run command".to_string())
         )?;
-        write!(f, "Windows: {}", self.win)?;
-        write!(f, "Linux: {}", self.linux)?;
-        write!(f, "Mac: {}", self.mac)
+        writeln!(f, "  Windows: {}", self.win)?;
+        writeln!(f, "  Linux: {}", self.linux)?;
+        writeln!(f, "  Mac: {}", self.mac)
     }
 }
 
@@ -99,12 +157,12 @@ pub struct Command {
 
 impl Display for Command {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "{}", self.program)?;
+        write!(f, "{}", self.program.bright_green())?;
         for arg in &self.args {
             if arg.contains(" ") {
-                write!(f, " \"{}\"", arg)?;
+                write!(f, " \"{}\"", arg.bright_green())?;
             } else {
-                write!(f, " {}", arg)?;
+                write!(f, " {}", arg.bright_green())?;
             }
         }
         Ok(())
@@ -155,14 +213,14 @@ mod tests {
             name: "Test Package".to_string(),
             description: "This is a test package".to_string(),
             authors: vec!["ur-fault".to_string()],
-            init: RunCommands {
-                default: Some(Command {
+            init: CommandSet {
+                global: vec![Command {
                     program: "cargo".to_string(),
                     args: ["build", "--release"]
                         .into_iter()
                         .map(str::to_string)
                         .collect(),
-                }),
+                }],
                 ..Default::default()
             },
             run: RunCommands {
@@ -175,7 +233,7 @@ mod tests {
                 }),
                 ..Default::default()
             },
-            checks: Checks {
+            checks: CommandSet {
                 global: vec![Command {
                     program: "cargo".to_string(),
                     args: ["--version"].into_iter().map(str::to_string).collect(),
@@ -226,14 +284,14 @@ mod tests {
                 .into_iter()
                 .map(str::to_string)
                 .collect(),
-            init: RunCommands {
-                default: Some(Command {
+            init: CommandSet {
+                global: vec![Command {
                     program: "cargo".to_string(),
                     args: ["build", "--release"]
                         .into_iter()
                         .map(str::to_string)
                         .collect(),
-                }),
+                }],
                 ..Default::default()
             },
             run: RunCommands {
@@ -253,7 +311,7 @@ mod tests {
                 }),
                 ..Default::default()
             },
-            checks: Checks {
+            checks: CommandSet {
                 global: vec![Command {
                     program: "cargo".to_string(),
                     args: ["--version"].into_iter().map(str::to_string).collect(),
