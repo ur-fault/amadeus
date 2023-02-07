@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -13,6 +15,15 @@ pub(crate) enum GlobalAction {
     Install,
     Remove,
     Show(ShowArguments),
+    Info(InfoArgumnets),
+}
+
+#[derive(Debug, Args)]
+pub(crate) struct InfoArgumnets {
+    #[clap(short, long, conflicts_with = "path")]
+    pub name: Option<String>,
+    #[clap(short, long, conflicts_with = "name", required = false, default_value = ".")]
+    pub path: Option<PathBuf>,
 }
 
 #[derive(Debug, Args)]

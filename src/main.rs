@@ -1,15 +1,9 @@
 use clap::Parser;
-use once_cell::sync::Lazy;
-use path_absolutize::Absolutize;
-use std::path::PathBuf;
+use run_that::manager::{REPOS_PATH, get_package_info};
 
 mod cli;
 
-static MAIN_PATH: Lazy<PathBuf> =
-    Lazy::new(|| PathBuf::from("~/.run-that/").absolutize().unwrap().into());
-static BIN_PATH: Lazy<PathBuf> = Lazy::new(|| MAIN_PATH.join("bin"));
-
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = cli::GlobalArgs::parse();
 
     #[cfg(debug_assertions)]
@@ -21,10 +15,24 @@ fn main() {
         cli::GlobalAction::Remove => println!("Remove"),
         cli::GlobalAction::Show(args) => {
             if args.install_path {
-                println!("Binaries are installed in: {:?}", BIN_PATH);
+                println!("Repositories are stored in: {:?}", REPOS_PATH);
             } else if args.installed_packages {
-                println!("Installed packages:");
+                println!("Installed repositories:");
             }
         }
+        cli::GlobalAction::Info(args) => {
+            let path = if let Some(name) = args.name {
+                REPOS_PATH.join(name)
+            } else if let Some(path) = args.path {
+                path
+            } else {
+                std::env::current_dir().unwrap()
+            };
+
+            let package = get_package_info(&path)?;
+            println!("Package info: {:#?}", package);
+        }
     }
+
+    Ok(())
 }

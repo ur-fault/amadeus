@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Clone, Serialize, PartialEq, Eq)]
@@ -6,32 +8,65 @@ pub struct Package {
     pub description: String,  // Description of the package
     pub authors: Vec<String>, // Authors of the package
     #[serde(default)]
-    pub init: RunCommands,    // Commands to run to initialize the package
+    pub init: RunCommands, // Commands to run to initialize the package
     pub run: RunCommands,     // Commands to run
     #[serde(default)]
-    pub checks: Checks,       // Checks if required programs are available
+    pub checks: Checks, // Checks if required programs are available
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize, Default, PartialEq, Eq)]
 pub struct Checks {
-    pub default: Vec<Command>, // Default checks to run
+    pub global: Vec<Command>, // Default checks to run
     #[serde(default)]
-    pub win: Vec<Command>,     // Checks to run on windows
+    pub win: Vec<Command>, // Checks to run on windows
     #[serde(default)]
-    pub linux: Vec<Command>,   // Checks to run on linux
+    pub linux: Vec<Command>, // Checks to run on linux
     #[serde(default)]
-    pub mac: Vec<Command>,     // Checks to run on mac
+    pub mac: Vec<Command>, // Checks to run on mac
+}
+
+impl Display for Checks {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        let print_checks = |cmds: &[Command]| -> Result<(), std::fmt::Error> {
+            for command in cmds {
+                write!(f, "\t{}", command)?;
+            }
+
+            Ok(())
+        };
+
+        if self.global.is_empty() {
+            
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Deserialize, Clone, Default, Serialize, PartialEq, Eq)]
 pub struct RunCommands {
     pub default: Option<Command>, // Default command to run
     #[serde(default)]
-    pub win: RunCommand,          // Command to run on windows
+    pub win: RunCommand, // Command to run on windows
     #[serde(default)]
-    pub linux: RunCommand,        // Command to run on linux
+    pub linux: RunCommand, // Command to run on linux
     #[serde(default)]
-    pub mac: RunCommand,          // Command to run on mac
+    pub mac: RunCommand, // Command to run on mac
+}
+
+impl Display for RunCommands {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(
+            f,
+            "Default: {}",
+            self.default
+                .clone()
+                .map(|c| format!("{}", c))
+                .unwrap_or("No default run command".to_string())
+        )?;
+        write!(f, "Windows: {}", self.win)?;
+        write!(f, "Linux: {}", self.linux)?;
+        write!(f, "Mac: {}", self.mac)
+    }
 }
 
 #[derive(Debug, Deserialize, Clone, Default, Serialize, PartialEq, Eq)]
@@ -45,11 +80,35 @@ pub enum RunCommand {
     Custom(Command), // Command is custom
 }
 
+impl Display for RunCommand {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            RunCommand::Null => write!(f, "Repo cannot be run on this platform"),
+            RunCommand::Default => write!(f, "Same as default command"),
+            RunCommand::Custom(command) => write!(f, "{}", command),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Clone, Serialize, PartialEq, Eq)]
 pub struct Command {
-    pub program: String,   // Program to run
+    pub program: String, // Program to run
     #[serde(default)]
     pub args: Vec<String>, // Arguments to pass to the program
+}
+
+impl Display for Command {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "{}", self.program)?;
+        for arg in &self.args {
+            if arg.contains(" ") {
+                write!(f, " \"{}\"", arg)?;
+            } else {
+                write!(f, " {}", arg)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -83,7 +142,7 @@ mod tests {
               linux: default
               mac: default
             checks:
-              default:
+              global:
               - program: cargo
                 args:
                 - --version
@@ -117,7 +176,7 @@ mod tests {
                 ..Default::default()
             },
             checks: Checks {
-                default: vec![Command {
+                global: vec![Command {
                     program: "cargo".to_string(),
                     args: ["--version"].into_iter().map(str::to_string).collect(),
                 }],
@@ -154,7 +213,7 @@ mod tests {
                 - run
                 - --release
             checks:
-              default:
+              global:
               - program: cargo
                 args:
                 - --version"#;
@@ -195,7 +254,7 @@ mod tests {
                 ..Default::default()
             },
             checks: Checks {
-                default: vec![Command {
+                global: vec![Command {
                     program: "cargo".to_string(),
                     args: ["--version"].into_iter().map(str::to_string).collect(),
                 }],

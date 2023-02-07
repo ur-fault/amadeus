@@ -27,7 +27,7 @@ fn main() {
             ..Default::default()
         },
         checks: Checks {
-            default: vec![Command {
+            global: vec![Command {
                 program: "cargo".to_string(),
                 args: ["--version"].into_iter().map(str::to_string).collect(),
             }],
