@@ -17,7 +17,7 @@ pub struct Package {
 
 impl Display for Package {
     fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
-        writeln!(f, "Name: {}", self.name)?;
+        writeln!(f, "Name: {}", self.name.bright_red())?;
         writeln!(f, "Description: {}", self.description)?;
 
         if self.authors.is_empty() {
@@ -69,30 +69,30 @@ impl Display for CommandSet {
         }
 
         if self.global.is_empty() {
-            writeln!(f, "  No global checks")?;
+            writeln!(f, "  No global commands")?;
         } else {
-            writeln!(f, "  Global checks:")?;
+            writeln!(f, "  Global commands:")?;
             print_checks(f, &self.global)?;
         }
 
         if self.win.is_empty() {
-            writeln!(f, "  No windows specific checks")?;
+            writeln!(f, "  No windows specific commands")?;
         } else {
-            writeln!(f, "  Windows checks:")?;
+            writeln!(f, "  Windows commands:")?;
             print_checks(f, &self.win)?;
         }
 
         if self.linux.is_empty() {
-            writeln!(f, "  No linux specific checks")?;
+            writeln!(f, "  No linux specific commands")?;
         } else {
-            writeln!(f, "  Linux checks:")?;
+            writeln!(f, "  Linux commands:")?;
             print_checks(f, &self.linux)?;
         }
 
         if self.mac.is_empty() {
-            writeln!(f, "  No mac specific checks")?;
+            writeln!(f, "  No mac specific commands")?;
         } else {
-            writeln!(f, "  Mac checks:")?;
+            writeln!(f, "  Mac commands:")?;
             print_checks(f, &self.mac)?;
         }
 
@@ -182,14 +182,14 @@ mod tests {
             authors:
             - ur-fault
             init:
-              default:
-                program: cargo
-                args:
-                - build
-                - --release
-              win: default
-              linux: default
-              mac: default
+              global:
+                - program: cargo
+                  args:
+                  - build
+                  - --release
+              win: []
+              linux: []
+              mac: []
             run:
               default:
                 program: cargo
@@ -254,11 +254,11 @@ mod tests {
             - ur-fault
             - ur-fault2
             init:
-              default:
-                program: cargo
-                args:
-                - build
-                - --release
+              global:
+                - program: cargo
+                  args:
+                  - build
+                  - --release
             run:
               default:
                 program: cargo

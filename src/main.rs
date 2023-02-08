@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match args.action {
         cli::GlobalAction::Check => println!("Check"),
-        cli::GlobalAction::Install => println!("Install"),
+        cli::GlobalAction::Install(_args) => println!("Install"),
         cli::GlobalAction::Remove => println!("Remove"),
         cli::GlobalAction::Show(args) => {
             if args.install_path {

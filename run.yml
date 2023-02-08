@@ -3,11 +3,11 @@ description: Launcher for git repos
 authors:
 - ur-fault
 init:
-  default:
-    program: cargo
-    args:
-    - build
-    - --release
+  global:
+    - program: cargo
+      args:
+      - build
+      - --release
 run:
   default:
     program: cargo

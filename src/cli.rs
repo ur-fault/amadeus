@@ -12,10 +12,18 @@ pub(crate) struct GlobalArgs {
 #[derive(Debug, Subcommand)]
 pub(crate) enum GlobalAction {
     Check,
-    Install,
+    Install(InstallArguments),
     Remove,
     Show(ShowArguments),
     Info(InfoArgumnets),
+}
+
+#[derive(Debug, Args)]
+pub(crate) struct InstallArguments {
+    #[clap(required_unless_present = "path")]
+    pub address: Option<String>,
+    #[clap(short, long)]
+    pub path: Option<PathBuf>,
 }
 
 #[derive(Debug, Args)]
