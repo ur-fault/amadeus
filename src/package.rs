@@ -60,7 +60,7 @@ impl Display for CommandSet {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         fn print_checks(f: &mut Formatter<'_>, cmds: &[Command]) -> Result<(), std::fmt::Error> {
             for command in cmds {
-                writeln!(f, "  \t{}", command)?;
+                writeln!(f, "  \t{command}")?;
             }
 
             writeln!(f)?;
@@ -118,7 +118,7 @@ impl Display for RunCommands {
             "  Default: {}",
             self.default
                 .clone()
-                .map(|c| format!("{}", c))
+                .map(|c| format!("{c}"))
                 .unwrap_or("  No default run command".to_string())
         )?;
         writeln!(f, "  Windows: {}", self.win)?;
@@ -143,7 +143,7 @@ impl Display for RunCommand {
         match self {
             RunCommand::Null => write!(f, "Repo cannot be run on this platform"),
             RunCommand::Default => write!(f, "Same as default command"),
-            RunCommand::Custom(command) => write!(f, "{}", command),
+            RunCommand::Custom(command) => write!(f, "{command}"),
         }
     }
 }
@@ -159,7 +159,7 @@ impl Display for Command {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(f, "{}", self.program.bright_green())?;
         for arg in &self.args {
-            if arg.contains(" ") {
+            if arg.contains(' ') {
                 write!(f, " \"{}\"", arg.bright_green())?;
             } else {
                 write!(f, " {}", arg.bright_green())?;
